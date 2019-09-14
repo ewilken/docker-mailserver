@@ -6,8 +6,9 @@ You can use this image as-is as found here: https://cloud.docker.com/u/radicand/
 
 ## Building yourself
 
-1. Run: `./compile-filebeat-arm.sh` which will put an ARM binary for filebeat in ./build-filebeat.
-2. Edit `./build-docker-image.sh` to reflect your own image tag
-3. Run: `./build-docker-image.sh`
+You will need Docker edge 19.x with buildx support. Regular Docker stable will not work as of this writing.
+
+1. Edit `./build-docker-image.sh` to reflect your own image tag
+2. Run: `./build-docker-image.sh` which will build the ARM binary for filebeat and then build an ARM image.
 
 If pushing upstream to docker hub, then the usual `docker push ...`
