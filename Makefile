@@ -48,7 +48,43 @@ run:
 		-e DMS_DEBUG=0 \
 		-h mail.my-domain.com -t $(NAME)
 	sleep 15
-	docker run --rm -d --name mail_smtponly_without_config \
+	docker run -d --name mail_privacy \
+		-v "`pwd`/test/config":/tmp/docker-mailserver \
+		-v "`pwd`/test":/tmp/docker-mailserver-test \
+		-e ENABLE_CLAMAV=1 \
+		-e ENABLE_SPAMASSASSIN=1 \
+		-e SA_TAG=-5.0 \
+		-e SA_TAG2=2.0 \
+		-e SA_KILL=3.0 \
+		-e SA_SPAM_SUBJECT="SPAM: " \
+		-e VIRUSMAILS_DELETE_DELAY=7 \
+		-e SASL_PASSWD="external-domain.com username:password" \
+		-e ENABLE_MANAGESIEVE=1 \
+		--cap-add=SYS_PTRACE \
+		-e PERMIT_DOCKER=host \
+		-e SA_SPAM_DESTINY="D_DISCARD" \
+		-e DMS_DEBUG=0 \
+		-h mail.my-domain.com -t $(NAME)
+	sleep 15
+	docker run -d --name mail_pop3 \
+		-v "`pwd`/test/config":/tmp/docker-mailserver \
+		-v "`pwd`/test":/tmp/docker-mailserver-test \
+		-v "`pwd`/test/config/letsencrypt":/etc/letsencrypt/live \
+		-e ENABLE_POP3=1 \
+		-e DMS_DEBUG=0 \
+		-e SSL_TYPE=letsencrypt \
+		-h mail.my-domain.com -t $(NAME)
+	sleep 15
+	docker run -d --name mail_smtponly \
+		-v "`pwd`/test/config":/tmp/docker-mailserver \
+		-v "`pwd`/test":/tmp/docker-mailserver-test \
+		-e SMTP_ONLY=1 \
+		-e PERMIT_DOCKER=network \
+		-e DMS_DEBUG=0 \
+		-e OVERRIDE_HOSTNAME=mail.my-domain.com \
+		-t $(NAME)
+	sleep 15
+	docker run -d --name mail_smtponly_without_config \
 		-e SMTP_ONLY=1 \
 		-e ENABLE_LDAP=1 \
 		-e PERMIT_DOCKER=network \

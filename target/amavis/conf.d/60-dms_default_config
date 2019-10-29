@@ -4,4 +4,6 @@ use strict;
    read_hash('/etc/postfix/vhost')
 );
 
+$log_level = 1;
+
 1;  # ensure a defined return
