@@ -1,16 +1,16 @@
-FROM debian:stretch-slim
+FROM debian:buster-slim
 
 ARG VCS_REF
 ARG VCS_VERSION
 
 LABEL maintainer="Thomas VIAL"  \
-    org.label-schema.name="docker-mailserver" \
-    org.label-schema.description="A fullstack but simple mailserver (smtp, imap, antispam, antivirus, ssl...)" \
-    org.label-schema.url="https://github.com/tomav/docker-mailserver" \
-    org.label-schema.vcs-ref=$VCS_REF \
-    org.label-schema.vcs-url="https://github.com/tomav/docker-mailserver" \
-    org.label-schema.version=$VCS_VERSION \
-    org.label-schema.schema-version="1.0"
+  org.label-schema.name="docker-mailserver" \
+  org.label-schema.description="A fullstack but simple mailserver (smtp, imap, antispam, antivirus, ssl...)" \
+  org.label-schema.url="https://github.com/radicand/docker-mailserver" \
+  org.label-schema.vcs-ref=$VCS_REF \
+  org.label-schema.vcs-url="https://github.com/radicand/docker-mailserver" \
+  org.label-schema.version=$VCS_VERSION \
+  org.label-schema.schema-version="1.0"
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV VIRUSMAILS_DELETE_DELAY=7
@@ -29,7 +29,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Packages
 # hadolint ignore=DL3015
-RUN echo "deb http://http.debian.net/debian stretch-backports main" | tee -a /etc/apt/sources.list.d/stretch-bp.list && \
+RUN echo "deb http://http.debian.net/debian buster-backports main" | tee -a /etc/apt/sources.list.d/buster-bp.list && \
   apt-get update -q --fix-missing && \
   apt-get -y install postfix && \
   # TODO installing postfix with --no-install-recommends makes "checking ssl: generated default cert works correctly" fail
@@ -77,7 +77,6 @@ RUN echo "deb http://http.debian.net/debian stretch-backports main" | tee -a /et
   postsrsd \
   pyzor \
   razor \
-  ripole \
   rpm2cpio \
   rsyslog \
   sasl2-bin \
@@ -88,14 +87,6 @@ RUN echo "deb http://http.debian.net/debian stretch-backports main" | tee -a /et
   unzip \
   whois \
   xz-utils \
-  zoo \
-  && \
-  # use Dovecot community repo to react faster on security updates
-  curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import && \
-  gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg && \
-  echo "deb https://repo.dovecot.org/ce-2.3-latest/debian/stretch stretch main" > /etc/apt/sources.list.d/dovecot-community.list && \
-  apt-get update -q --fix-missing && \
-  apt-get -y install --no-install-recommends \
   dovecot-core \
   dovecot-imapd \
   dovecot-ldap \
@@ -193,7 +184,7 @@ RUN sed -i -r 's/#(@|   \\%)bypass/\1bypass/g' /etc/amavis/conf.d/15-content_fil
 # Configure Fail2ban
 COPY target/fail2ban/jail.conf /etc/fail2ban/jail.conf
 COPY target/fail2ban/filter.d/dovecot.conf /etc/fail2ban/filter.d/dovecot.conf
-RUN echo "ignoreregex =" >> /etc/fail2ban/filter.d/postfix-sasl.conf && mkdir /var/run/fail2ban
+RUN mkdir /var/run/fail2ban
 
 # Enables Pyzor and Razor
 RUN su - amavis -c "razor-admin -create && \
@@ -242,7 +233,8 @@ RUN sed -i -r "/^#?compress/c\compress\ncopytruncate" /etc/logrotate.conf && \
   sed -i -e 's/invoke-rc.d rsyslog rotate > \/dev\/null/invoke-rc.d rsyslog --quiet rotate > \/dev\/null/g' /etc/logrotate.d/rsyslog
 
 # Get LetsEncrypt signed certificate
-RUN curl -s https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem > /etc/ssl/certs/lets-encrypt-x3-cross-signed.pem
+# Is this really necessary?
+# RUN curl -s https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem > /etc/ssl/certs/lets-encrypt-x3-cross-signed.pem
 
 COPY ./target/bin /usr/local/bin
 # Start-mailserver script
